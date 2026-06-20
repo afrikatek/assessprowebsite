@@ -41,7 +41,12 @@ export default function Contact() {
     setStatus({ color: '#0B1F3B', msg: 'Sending…' })
 
     try {
-      const res = await fetch('/api/contact', { method: 'POST', body: new FormData(form) })
+      const payload = Object.fromEntries(new FormData(form).entries())
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
       const body = await res.json().catch(() => ({}))
 
       if (res.ok && body.ok) {

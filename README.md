@@ -11,7 +11,7 @@ The corporate site for Assesspro Consultants Ltd (Lusaka, Kitwe, SADC region).
 | Pre-rendering | `vite-react-ssg` — every route is generated as static HTML at build time |
 | Styling | Plain CSS with custom properties (`src/styles/global.css`) |
 | Blog | Markdown files in `src/content/blog/`, parsed at build with `front-matter` + `marked` |
-| Contact form | Vercel Edge Function (`api/contact.js`) → verifies Cloudflare Turnstile → sends via Resend |
+| Contact form | Vercel Function (Node.js) (`api/contact.js`) → verifies Cloudflare Turnstile → sends via Resend |
 | Hosting | Vercel (Hobby tier) |
 
 ## What's in here
@@ -27,7 +27,7 @@ The corporate site for Assesspro Consultants Ltd (Lusaka, Kitwe, SADC region).
 | `src/styles/global.css` | The brand stylesheet — navy `#0B1F3B`, crimson `#8D0C16`, EB Garamond body, Google Sans display |
 | `src/content/blog/*.md` | Blog posts. Frontmatter: `title`, `description`, `date`, `author`, `draft`, `cover` |
 | `src/lib/blog.js` | `getAllPosts()` / `getPost(slug)` — Markdown loader |
-| `api/contact.js` | Vercel Edge Function: validates the form, verifies Turnstile, emails via Resend |
+| `api/contact.js` | Vercel Function (Node.js): validates the form, verifies Turnstile, emails via Resend |
 | `.env.local.example` | Template for local secrets (copy to `.env.local` for `vercel dev`) |
 
 ---
@@ -65,10 +65,10 @@ cp .env.local.example .env.local
 Run it:
 
 ```sh
-vercel dev                 # Vite + Edge Function on http://localhost:3000
+vercel dev                 # Vite + Vercel Function on http://localhost:3000
 ```
 
-`vercel dev` proxies non-`/api/*` requests to the Vite dev server (so HMR still works) and routes `/api/contact` to the Edge Function with env vars from `.env.local`. This is the only way to:
+`vercel dev` proxies non-`/api/*` requests to the Vite dev server (so HMR still works) and routes `/api/contact` to the Node.js function. Env vars come from `.env.local` — loaded by the function via a small inline reader at the top of `api/contact.js`, because `vercel dev` itself doesn't reliably inject `.env.local` into the function process when the same keys aren't also registered on the project's Development scope. This is the only way to:
 - Submit the contact form end-to-end locally
 - See the real `Resend failed <status> <body>` line in your terminal if Resend rejects the send
 - Verify Turnstile against a real secret
@@ -218,7 +218,7 @@ Vercel (static dist/)
   ├── /blog                ← src/pages/Blog.jsx
   ├── /blog/<slug>         ← src/pages/BlogPost.jsx    (one HTML per Markdown file)
   │
-  └── /api/contact         ──▶ Vercel Edge Function (api/contact.js)
+  └── /api/contact         ──▶ Vercel Function (Node.js) (api/contact.js)
                                   │
                                   ├─ Verifies Cloudflare Turnstile
                                   ├─ Validates + escapes input
